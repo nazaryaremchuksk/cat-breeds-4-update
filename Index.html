@@ -94,22 +94,70 @@
             font-size: 2.5rem;
         }
 
-        .gallery {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 20px;
+        /* Стилі для обгортки каруселі */
+        .carousel-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            width: 100%;
+            position: relative;
             opacity: 1;
             transition: opacity 0.5s ease;
         }
 
-        .gallery.hidden {
+        .carousel-wrapper.hidden {
             opacity: 0;
             pointer-events: none;
         }
 
-        .breed-card {
+        /* Стилі для кнопок каруселі */
+        .carousel-btn {
+            background: linear-gradient(135deg, #247ba0 0%, #1b98e0 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 1.5rem;
             cursor: pointer;
-            /* Змінено транзицію: анімація transform тепер керується JS */
+            box-shadow: 0 4px 15px rgba(36, 123, 160, 0.3);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            z-index: 10;
+            font-family: inherit;
+        }
+
+        .carousel-btn:hover {
+            transform: scale(1.1);
+            background: linear-gradient(135deg, #1b98e0 0%, #006494 100%);
+            box-shadow: 0 6px 20px rgba(36, 123, 160, 0.5);
+        }
+
+        /* Стилі для самої галереї-каруселі */
+        .gallery {
+            display: flex;
+            gap: 25px;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            scroll-snap-type: x mandatory;
+            padding: 30px 10px; /* Додано padding для коректного відображення 3D ефекту */
+            width: calc(100% - 130px); /* Враховуємо ширину кнопок */
+            -ms-overflow-style: none; /* Приховуємо скролбар для IE та Edge */
+            scrollbar-width: none; /* Приховуємо скролбар для Firefox */
+        }
+
+        .gallery::-webkit-scrollbar {
+            display: none; /* Приховуємо скролбар для Chrome/Safari/Opera */
+        }
+
+        .breed-card {
+            flex: 0 0 320px; /* Фіксована ширина карток у каруселі */
+            scroll-snap-align: center;
+            cursor: pointer;
             transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.5s ease;
             background: rgba(255, 255, 255, 0.8);
             padding: 15px;
@@ -141,7 +189,6 @@
 
         .breed-card:hover .breed-image {
             box-shadow: 0 12px 30px rgba(27, 152, 224, 0.3);
-            /* Видалено статичний поворот, бо працює JS 3D */
         }
 
         .breed-name {
@@ -436,12 +483,7 @@
             box-shadow: 0 8px 25px rgba(36, 123, 160, 0.3);
         }
 
-        @media (max-width: 1200px) {
-            .gallery { grid-template-columns: repeat(3, 1fr); }
-        }
-
         @media (max-width: 768px) {
-            .gallery { grid-template-columns: repeat(2, 1fr); }
             .detail-content {
                 flex-direction: column;
                 gap: 30px;
@@ -449,6 +491,15 @@
             }
             h1 { font-size: 2rem; }
             .detail-title { font-size: 2.5rem; }
+            
+            .breed-card {
+                flex: 0 0 260px;
+            }
+            .carousel-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+            }
         }
     </style>
 </head>
@@ -458,46 +509,53 @@
 
         <button class="list-toggle-button" onclick="showBreedList()">View All Breeds List</button>
 
-        <div class="gallery" id="gallery">
-            <div class="breed-card" onclick="showDetail(0)">
-                <img src="https://images.pexels.com/photos/1543793/pexels-photo-1543793.jpeg?auto=compress&cs=tinysrgb&w=500" alt="British Shorthair" class="breed-image">
-                <div class="breed-name">British Shorthair</div>
-            </div>
+        <!-- Обгортка каруселі з кнопками -->
+        <div class="carousel-wrapper" id="carouselWrapper">
+            <button class="carousel-btn" onclick="scrollCarousel(-1)">&#10094;</button>
+            
+            <div class="gallery" id="gallery">
+                <div class="breed-card" onclick="showDetail(0)">
+                    <img src="https://images.pexels.com/photos/1543793/pexels-photo-1543793.jpeg?auto=compress&cs=tinysrgb&w=500" alt="British Shorthair" class="breed-image">
+                    <div class="breed-name">British Shorthair</div>
+                </div>
 
-            <div class="breed-card" onclick="showDetail(1)">
-                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTU6qlG9b_EZZkfDlFl4ysDt82XKZZlMQfD64d1hzhksveUjJg-uEgEbpg&s=10" alt="Scottish Fold" class="breed-image">
-                <div class="breed-name">Scottish Fold</div>
-            </div>
+                <div class="breed-card" onclick="showDetail(1)">
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTU6qlG9b_EZZkfDlFl4ysDt82XKZZlMQfD64d1hzhksveUjJg-uEgEbpg&s=10" alt="Scottish Fold" class="breed-image">
+                    <div class="breed-name">Scottish Fold</div>
+                </div>
 
-            <div class="breed-card" onclick="showDetail(2)">
-                <img src="https://images.pexels.com/photos/2361952/pexels-photo-2361952.jpeg?auto=compress&cs=tinysrgb&w=500" alt="Siamese" class="breed-image">
-                <div class="breed-name">Siamese</div>
-            </div>
+                <div class="breed-card" onclick="showDetail(2)">
+                    <img src="https://images.pexels.com/photos/2361952/pexels-photo-2361952.jpeg?auto=compress&cs=tinysrgb&w=500" alt="Siamese" class="breed-image">
+                    <div class="breed-name">Siamese</div>
+                </div>
 
-            <div class="breed-card" onclick="showDetail(3)">
-                <img src="https://images.pexels.com/photos/1049764/pexels-photo-1049764.jpeg?auto=compress&cs=tinysrgb&w=500" alt="Maine Coon" class="breed-image">
-                <div class="breed-name">Maine Coon</div>
-            </div>
+                <div class="breed-card" onclick="showDetail(3)">
+                    <img src="https://images.pexels.com/photos/1049764/pexels-photo-1049764.jpeg?auto=compress&cs=tinysrgb&w=500" alt="Maine Coon" class="breed-image">
+                    <div class="breed-name">Maine Coon</div>
+                </div>
 
-            <div class="breed-card" onclick="showDetail(4)">
-                <img src="https://images.pexels.com/photos/2558605/pexels-photo-2558605.jpeg?auto=compress&cs=tinysrgb&w=500" alt="Bengal" class="breed-image">
-                <div class="breed-name">Bengal</div>
-            </div>
+                <div class="breed-card" onclick="showDetail(4)">
+                    <img src="https://images.pexels.com/photos/2558605/pexels-photo-2558605.jpeg?auto=compress&cs=tinysrgb&w=500" alt="Bengal" class="breed-image">
+                    <div class="breed-name">Bengal</div>
+                </div>
 
-            <div class="breed-card" onclick="showDetail(5)">
-                <img src="https://images.pexels.com/photos/3777622/pexels-photo-3777622.jpeg?auto=compress&cs=tinysrgb&w=500" alt="Persian" class="breed-image">
-                <div class="breed-name">Persian</div>
+                <div class="breed-card" onclick="showDetail(5)">
+                    <img src="https://images.pexels.com/photos/3777622/pexels-photo-3777622.jpeg?auto=compress&cs=tinysrgb&w=500" alt="Persian" class="breed-image">
+                    <div class="breed-name">Persian</div>
+                </div>
+                
+                <div class="breed-card" onclick="showDetail(6)">
+                   <img src="https://bestforpet.co.nz/wp-content/uploads/2025/11/Sphynx.jpg" alt="Sphynx" class="breed-image">
+                   <div class="breed-name">Sphynx</div>
+                </div>
+
+                <div class="breed-card" onclick="showDetail(7)">
+                  <img src="https://headsupfortails.com/cdn/shop/articles/Ragdoll_Blog_images__Helping_a_Senior_Dog_With_Weak_Eyesight_Navigate_Their_Space.jpg?v=1759237614" alt="Ragdoll" class="breed-image">
+                  <div class="breed-name">Ragdoll</div>
+                </div>
             </div>
             
-            <div class="breed-card" onclick="showDetail(6)">
-               <img src="https://bestforpet.co.nz/wp-content/uploads/2025/11/Sphynx.jpg" alt="Sphynx" class="breed-image">
-               <div class="breed-name">Sphynx</div>
-            </div>
-
-            <div class="breed-card" onclick="showDetail(7)">
-              <img src="https://headsupfortails.com/cdn/shop/articles/Ragdoll_Blog_images__Helping_a_Senior_Dog_With_Weak_Eyesight_Navigate_Their_Space.jpg?v=1759237614" alt="Ragdoll" class="breed-image">
-              <div class="breed-name">Ragdoll</div>
-            </div>
+            <button class="carousel-btn" onclick="scrollCarousel(1)">&#10095;</button>
         </div>
 
         <div class="detail-view" id="detailView">
@@ -620,9 +678,16 @@
         window.addEventListener('DOMContentLoaded', initAdvancedEffects);
         // -----------------------------------
 
+        // Функція для скролу каруселі
+        function scrollCarousel(direction) {
+            const gallery = document.getElementById('gallery');
+            const scrollAmount = window.innerWidth < 768 ? 285 : 345; // Ширина картки + gap
+            gallery.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
+        }
+
         function showDetail(index) {
             const breed = breeds[index];
-            const gallery = document.getElementById('gallery');
+            const carouselWrapper = document.getElementById('carouselWrapper');
             const detailView = document.getElementById('detailView');
             const mainTitle = document.getElementById('mainTitle');
             const toggleButton = document.querySelector('.list-toggle-button');
@@ -632,12 +697,12 @@
             document.getElementById('detailTitle').textContent = breed.name;
             document.getElementById('detailDescription').textContent = breed.description;
 
-            gallery.classList.add('hidden');
+            carouselWrapper.classList.add('hidden');
             mainTitle.style.opacity = '0';
             toggleButton.style.opacity = '0';
 
             setTimeout(() => {
-                gallery.style.display = 'none';
+                carouselWrapper.style.display = 'none';
                 mainTitle.style.display = 'none';
                 toggleButton.style.display = 'none';
                 detailView.classList.add('active');
@@ -645,7 +710,7 @@
         }
 
         function hideDetail() {
-            const gallery = document.getElementById('gallery');
+            const carouselWrapper = document.getElementById('carouselWrapper');
             const detailView = document.getElementById('detailView');
             const mainTitle = document.getElementById('mainTitle');
             const toggleButton = document.querySelector('.list-toggle-button');
@@ -653,12 +718,12 @@
             detailView.classList.remove('active');
 
             setTimeout(() => {
-                gallery.style.display = 'grid';
+                carouselWrapper.style.display = 'flex';
                 mainTitle.style.display = 'block';
                 toggleButton.style.display = 'block';
 
                 setTimeout(() => {
-                    gallery.classList.remove('hidden');
+                    carouselWrapper.classList.remove('hidden');
                     mainTitle.style.opacity = '1';
                     toggleButton.style.opacity = '1';
                 }, 50);
@@ -666,7 +731,7 @@
         }
 
         function showBreedList() {
-            const gallery = document.getElementById('gallery');
+            const carouselWrapper = document.getElementById('carouselWrapper');
             const mainTitle = document.getElementById('mainTitle');
             const breedListView = document.getElementById('breedListView');
             const toggleButton = document.querySelector('.list-toggle-button');
@@ -676,12 +741,12 @@
                 `<li onclick="showDetailFromList(${index})">${breed.name}</li>`
             ).join('');
 
-            gallery.classList.add('hidden');
+            carouselWrapper.classList.add('hidden');
             mainTitle.style.opacity = '0';
             toggleButton.style.opacity = '0';
 
             setTimeout(() => {
-                gallery.style.display = 'none';
+                carouselWrapper.style.display = 'none';
                 mainTitle.style.display = 'none';
                 toggleButton.style.display = 'none';
                 breedListView.classList.add('active');
@@ -689,7 +754,7 @@
         }
 
         function hideBreedList() {
-            const gallery = document.getElementById('gallery');
+            const carouselWrapper = document.getElementById('carouselWrapper');
             const mainTitle = document.getElementById('mainTitle');
             const breedListView = document.getElementById('breedListView');
             const toggleButton = document.querySelector('.list-toggle-button');
@@ -697,12 +762,12 @@
             breedListView.classList.remove('active');
 
             setTimeout(() => {
-                gallery.style.display = 'grid';
+                carouselWrapper.style.display = 'flex';
                 mainTitle.style.display = 'block';
                 toggleButton.style.display = 'block';
 
                 setTimeout(() => {
-                    gallery.classList.remove('hidden');
+                    carouselWrapper.classList.remove('hidden');
                     mainTitle.style.opacity = '1';
                     toggleButton.style.opacity = '1';
                 }, 50);
