@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Popular Cat Breeds</title>
+    <!-- Importing DynaPuff font for headings -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DynaPuff:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Color Palette:
+        Darkest Blue: #13293d (for text)
+        Dark Blue: #006494 (for headings)
+        Medium Blue: #247ba0 (buttons, borders)
+        Light Blue: #1b98e0 (hovers, accents)
+        Background: #e8f1f2
+        */
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            /* Using Cause font for text with fallback to sans-serif */
+            font-family: 'Cause', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #e8f1f2 0%, #ffffff 50%, #e8f1f2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            position: relative;
+            overflow-x: hidden;
+            color: #13293d;
+            
+            /* Змінні для паралакс-ефекту фону */
+            --bg-x: 0px;
+            --bg-y: 0px;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* Updated SVG background circle colors to blue shades */
+            background-image:
+                url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="15" cy="20" r="8" fill="%23247ba0" opacity="0.1"/><circle cx="85" cy="15" r="10" fill="%231b98e0" opacity="0.1"/><circle cx="25" cy="80" r="6" fill="%23006494" opacity="0.08"/><circle cx="75" cy="70" r="9" fill="%23247ba0" opacity="0.1"/></svg>');
+            background-size: 400px 400px;
+            background-repeat: repeat;
+            /* Динамічна позиція фону для паралаксу */
+            background-position: var(--bg-x) var(--bg-y);
+            transition: background-position 0.1s ease-out;
+            pointer-events: none;
+            z-index: 0;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(20px); }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        h1, h2, .detail-title, .breed-name {
+            /* Applying DynaPuff font for headings */
+            font-family: 'DynaPuff', cursive;
+        }
+
+        h1 {
+            text-align: center;
+            color: #006494;
+            font-size: 3.5rem;
+            margin-bottom: 60px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 4px rgba(19, 41, 61, 0.15);
+            position: relative;
+        }
+
+        h1::before,
+        h1::after {
+            content: '🐾';
+            margin: 0 20px;
+            font-size: 2.5rem;
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 20px;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        .gallery.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .breed-card {
+            cursor: pointer;
+            /* Змінено транзицію: анімація transform тепер керується JS */
+            transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.5s ease;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 15px;
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(36, 123, 160, 0.2);
+            box-shadow: 0 4px 15px rgba(19, 41, 61, 0.05);
+            /* Додаємо перспективу для 3D */
+            transform-style: preserve-3d;
+        }
+
+        .breed-card:hover {
+            background: rgba(255, 255, 255, 1);
+            border-color: #1b98e0;
+            box-shadow: 0 12px 25px rgba(36, 123, 160, 0.2);
+        }
+
+        .breed-image {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(19, 41, 61, 0.1);
+            transition: all 0.3s ease;
+            border: 3px solid #e8f1f2;
+            /* Щоб фото трохи виступало у 3D просторі */
+            transform: translateZ(20px);
+        }
+
+        .breed-card:hover .breed-image {
+            box-shadow: 0 12px 30px rgba(27, 152, 224, 0.3);
+            /* Видалено статичний поворот, бо працює JS 3D */
+        }
+
+        .breed-name {
+            text-align: center;
+            margin-top: 15px;
+            color: #006494;
+            font-size: 1.2rem;
+            font-weight: 600;
+            /* Щоб текст трохи виступав у 3D просторі */
+            transform: translateZ(30px);
+        }
+
+        .detail-view {
+            display: none;
+            opacity: 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            padding: 40px;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(232, 241, 242, 0.98) 0%, rgba(255, 255, 255, 0.98) 100%);
+            z-index: 100;
+        }
+
+        .detail-view::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><g opacity="0.05"><circle cx="20" cy="25" r="7" fill="%23006494"/><circle cx="80" cy="35" r="8" fill="%23006494"/><circle cx="30" cy="75" r="6" fill="%23006494"/><circle cx="70" cy="70" r="7" fill="%23006494"/></g></svg>');
+            background-size: 400px 400px;
+            background-repeat: repeat;
+            pointer-events: none;
+        }
+
+        .detail-view.active {
+            display: flex;
+            animation: fadeIn 0.5s forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        .detail-content {
+            display: flex;
+            align-items: center;
+            gap: 60px;
+            max-width: 1200px;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 50px;
+            border-radius: 24px;
+            backdrop-filter: blur(10px);
+            border: 3px solid rgba(36, 123, 160, 0.3);
+            box-shadow: 0 20px 60px rgba(19, 41, 61, 0.15);
+        }
+
+        .detail-image-container {
+            flex: 1;
+            animation: slideInLeft 0.6s ease;
+        }
+
+        @keyframes slideInLeft {
+            from { transform: translateX(-100px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .detail-image {
+            width: 100%;
+            max-width: 500px;
+            height: 500px;
+            object-fit: cover;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(36, 123, 160, 0.2);
+            border: 5px solid #e8f1f2;
+        }
+
+        .detail-info {
+            flex: 1;
+            animation: slideInRight 0.6s ease;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .detail-title {
+            font-size: 3.5rem;
+            color: #006494;
+            margin-bottom: 30px;
+        }
+
+        .detail-title::before {
+            content: '🐱 ';
+            margin-right: 10px;
+        }
+
+        .detail-description {
+            font-size: 1.3rem;
+            line-height: 1.8;
+            color: #13293d;
+            margin-bottom: 40px;
+            background: rgba(232, 241, 242, 0.6);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #247ba0;
+        }
+
+        .back-button {
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            background: linear-gradient(135deg, #247ba0 0%, #1b98e0 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(36, 123, 160, 0.4);
+            font-weight: 600;
+            font-family: inherit;
+        }
+
+        .back-button::before {
+            content: '🐾 ';
+            margin-right: 8px;
+        }
+
+        .back-button:hover {
+            background: linear-gradient(135deg, #1b98e0 0%, #006494 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(27, 152, 224, 0.5);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .learn-more-button {
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            background: rgba(255, 255, 255, 0.9);
+            color: #006494;
+            border: 3px solid rgba(36, 123, 160, 0.5);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(36, 123, 160, 0.1);
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            font-family: inherit;
+        }
+
+        .learn-more-button:hover {
+            background: linear-gradient(135deg, #247ba0 0%, #1b98e0 100%);
+            color: white;
+            border-color: transparent;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(36, 123, 160, 0.4);
+        }
+
+        .list-toggle-button {
+            display: block;
+            margin: 0 auto 40px;
+            padding: 18px 50px;
+            font-size: 1.2rem;
+            background: linear-gradient(135deg, #247ba0 0%, #1b98e0 100%);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(36, 123, 160, 0.3);
+            font-weight: 600;
+            font-family: inherit;
+        }
+
+        .list-toggle-button:hover {
+            background: linear-gradient(135deg, #1b98e0 0%, #006494 100%);
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 12px 35px rgba(27, 152, 224, 0.4);
+        }
+
+        .breed-list-view {
+            display: none;
+            opacity: 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            padding: 40px 20px;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(232, 241, 242, 0.98) 0%, rgba(255, 255, 255, 0.98) 100%);
+            z-index: 90;
+            overflow-y: auto;
+        }
+
+        .breed-list-view.active {
+            display: flex;
+            animation: fadeIn 0.5s forwards;
+        }
+
+        .breed-list-content {
+            max-width: 800px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 50px;
+            border-radius: 24px;
+            backdrop-filter: blur(10px);
+            border: 3px solid rgba(36, 123, 160, 0.3);
+            box-shadow: 0 20px 60px rgba(19, 41, 61, 0.15);
+        }
+
+        .breed-list-content h2 {
+            text-align: center;
+            color: #006494;
+            font-size: 2.5rem;
+            margin-bottom: 40px;
+            font-family: 'DynaPuff', cursive;
+        }
+
+        .breed-list-content h2::before { content: '🐾 '; }
+        .breed-list-content h2::after { content: ' 🐾'; }
+
+        .breed-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .breed-list li {
+            padding: 20px 30px;
+            margin-bottom: 15px;
+            background: rgba(232, 241, 242, 0.6);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid #247ba0;
+            font-size: 1.2rem;
+            color: #13293d;
+            font-weight: 500;
+        }
+
+        .breed-list li:hover {
+            background: linear-gradient(135deg, #247ba0 0%, #1b98e0 100%);
+            color: white;
+            transform: translateX(10px);
+            box-shadow: 0 6px 20px rgba(36, 123, 160, 0.3);
+        }
+
+        .breed-list li::before {
+            content: '🐱 ';
+            margin-right: 10px;
+        }
+
+        .back-to-main-button {
+            display: block;
+            margin: 40px auto 0;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            background: rgba(255, 255, 255, 0.9);
+            color: #006494;
+            border: 3px solid rgba(36, 123, 160, 0.5);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(36, 123, 160, 0.1);
+            font-weight: 600;
+            font-family: inherit;
+        }
+
+        .back-to-main-button:hover {
+            background: linear-gradient(135deg, #247ba0 0%, #1b98e0 100%);
+            color: white;
+            border-color: transparent;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(36, 123, 160, 0.3);
+        }
+
+        @media (max-width: 1200px) {
+            .gallery { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .gallery { grid-template-columns: repeat(2, 1fr); }
+            .detail-content {
+                flex-direction: column;
+                gap: 30px;
+                padding: 30px;
+            }
+            h1 { font-size: 2rem; }
+            .detail-title { font-size: 2.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 id="mainTitle">Popular Cat Breeds</h1>
+
+        <button class="list-toggle-button" onclick="showBreedList()">View All Breeds List</button>
+
+        <div class="gallery" id="gallery">
+            <div class="breed-card" onclick="showDetail(0)">
+                <img src="https://images.pexels.com/photos/1543793/pexels-photo-1543793.jpeg?auto=compress&cs=tinysrgb&w=500" alt="British Shorthair" class="breed-image">
+                <div class="breed-name">British Shorthair</div>
+            </div>
+
+            <div class="breed-card" onclick="showDetail(1)">
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTU6qlG9b_EZZkfDlFl4ysDt82XKZZlMQfD64d1hzhksveUjJg-uEgEbpg&s=10" alt="Scottish Fold" class="breed-image">
+                <div class="breed-name">Scottish Fold</div>
+            </div>
+
+            <div class="breed-card" onclick="showDetail(2)">
+                <img src="https://images.pexels.com/photos/2361952/pexels-photo-2361952.jpeg?auto=compress&cs=tinysrgb&w=500" alt="Siamese" class="breed-image">
+                <div class="breed-name">Siamese</div>
+            </div>
+
+            <div class="breed-card" onclick="showDetail(3)">
+                <img src="https://images.pexels.com/photos/1049764/pexels-photo-1049764.jpeg?auto=compress&cs=tinysrgb&w=500" alt="Maine Coon" class="breed-image">
+                <div class="breed-name">Maine Coon</div>
+            </div>
+
+            <div class="breed-card" onclick="showDetail(4)">
+                <img src="https://images.pexels.com/photos/2558605/pexels-photo-2558605.jpeg?auto=compress&cs=tinysrgb&w=500" alt="Bengal" class="breed-image">
+                <div class="breed-name">Bengal</div>
+            </div>
+
+            <div class="breed-card" onclick="showDetail(5)">
+                <img src="https://images.pexels.com/photos/3777622/pexels-photo-3777622.jpeg?auto=compress&cs=tinysrgb&w=500" alt="Persian" class="breed-image">
+                <div class="breed-name">Persian</div>
+            </div>
+            
+            <div class="breed-card" onclick="showDetail(6)">
+               <img src="https://bestforpet.co.nz/wp-content/uploads/2025/11/Sphynx.jpg" alt="Sphynx" class="breed-image">
+               <div class="breed-name">Sphynx</div>
+            </div>
+
+            <div class="breed-card" onclick="showDetail(7)">
+              <img src="https://headsupfortails.com/cdn/shop/articles/Ragdoll_Blog_images__Helping_a_Senior_Dog_With_Weak_Eyesight_Navigate_Their_Space.jpg?v=1759237614" alt="Ragdoll" class="breed-image">
+              <div class="breed-name">Ragdoll</div>
+            </div>
+        </div>
+
+        <div class="detail-view" id="detailView">
+            <div class="detail-content">
+                <div class="detail-image-container" id="imageContainer">
+                    <img id="detailImage" src="" alt="" class="detail-image">
+                </div>
+                <div class="detail-info" id="detailInfo">
+                    <h2 class="detail-title" id="detailTitle"></h2>
+                    <p class="detail-description" id="detailDescription"></p>
+                    <div class="button-group">
+                        <button class="back-button" onclick="hideDetail()">Back to Gallery</button>
+                        <a href="https://www.purina.co.uk/find-a-pet/cat-breeds" target="_blank" rel="noopener noreferrer" class="learn-more-button">Learn more about other breeds</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="breed-list-view" id="breedListView">
+            <div class="breed-list-content">
+                <h2>Popular Cat Breeds</h2>
+                <section>
+                    <ul class="breed-list" id="breedList">
+                    </ul>
+                </section>
+                <button class="back-to-main-button" onclick="hideBreedList()">Back to Main Screen</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const breeds = [
+            {
+                name: "British Shorthair",
+                image: "https://images.pexels.com/photos/1543793/pexels-photo-1543793.jpeg?auto=compress&cs=tinysrgb&w=800",
+                description: "Known for their dense coat and round face, British Shorthairs are calm, easy-going companions."
+            },
+            {
+                name: "Scottish Fold",
+                image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTU6qlG9b_EZZkfDlFl4ysDt82XKZZlMQfD64d1hzhksveUjJg-uEgEbpg&s=10",
+                description: "Distinctive for their folded ears, Scottish Folds are sweet-tempered and adapt well to various living situations."
+            },
+            {
+                name: "Siamese",
+                image: "https://images.pexels.com/photos/2361952/pexels-photo-2361952.jpeg?auto=compress&cs=tinysrgb&w=800",
+                description: "Elegant and vocal, Siamese cats are known for their striking blue eyes and color-pointed coat."
+            },
+            {
+                name: "Maine Coon",
+                image: "https://images.pexels.com/photos/1049764/pexels-photo-1049764.jpeg?auto=compress&cs=tinysrgb&w=800",
+                description: "One of the largest domestic cat breeds, Maine Coons are gentle giants with luxurious long fur."
+            },
+            {
+                name: "Bengal",
+                image: "https://images.pexels.com/photos/2558605/pexels-photo-2558605.jpeg?auto=compress&cs=tinysrgb&w=800",
+                description: "With their wild leopard-like spots and energetic personality, Bengals are athletic and highly active."
+            },
+            {
+                name: "Persian",
+                image: "https://images.pexels.com/photos/3777622/pexels-photo-3777622.jpeg?auto=compress&cs=tinysrgb&w=800",
+                description: "Persian cats are recognized for their long, flowing coat and flat, sweet face."
+            },
+            {
+                name: "Sphynx",
+                image: "https://bestforpet.co.nz/wp-content/uploads/2025/11/Sphynx.jpg",
+                description: "The Sphynx is a hairless cat breed known for its friendly and energetic personality."
+            },
+            {
+                name: "Ragdoll",
+                image: "https://headsupfortails.com/cdn/shop/articles/Ragdoll_Blog_images__Helping_a_Senior_Dog_With_Weak_Eyesight_Navigate_Their_Space.jpg?v=1759237614",
+                description: "Ragdolls are gentle and affectionate cats with beautiful blue eyes and a calm temperament."
+            }
+        ];
+
+        // --- НОВІ ЕФЕКТИ 3D ТА ПАРАЛАКСУ ---
+        function initAdvancedEffects() {
+            // 1. Інтерактивний паралакс фону
+            document.addEventListener('mousemove', (e) => {
+                // Вираховуємо відносний зсув від центру вікна
+                const x = (window.innerWidth / 2 - e.clientX) * 0.05;
+                const y = (window.innerHeight / 2 - e.clientY) * 0.05;
+                
+                // Передаємо координати в CSS змінні
+                document.body.style.setProperty('--bg-x', `${x}px`);
+                document.body.style.setProperty('--bg-y', `${y}px`);
+            });
+
+            // 2. 3D-нахил карток
+            const cards = document.querySelectorAll('.breed-card');
+            
+            cards.forEach(card => {
+                card.addEventListener('mousemove', (e) => {
+                    const rect = card.getBoundingClientRect();
+                    // Координати миші всередині картки
+                    const x = e.clientX - rect.left; 
+                    const y = e.clientY - rect.top;  
+                    
+                    // Знаходимо центр картки
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    
+                    // Обчислюємо кут повороту (чим далі від центру, тим більший кут)
+                    const rotateX = ((y - centerY) / centerY) * -15; // макс. 15 градусів
+                    const rotateY = ((x - centerX) / centerX) * 15;
+                    
+                    // Задаємо коротку транзицію для миттєвого слідування за курсором
+                    card.style.transition = 'transform 0.1s ease-out, box-shadow 0.3s ease';
+                    card.style.transform = `perspective(1000px) scale(1.05) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+                });
+                
+                card.addEventListener('mouseleave', () => {
+                    // При відведенні миші повертаємо картку в нульовий стан з плавною анімацією
+                    card.style.transition = 'transform 0.5s ease, box-shadow 0.3s ease';
+                    card.style.transform = `perspective(1000px) scale(1) rotateX(0deg) rotateY(0deg)`;
+                });
+            });
+        }
+
+        // Запускаємо ефекти після завантаження структури документа
+        window.addEventListener('DOMContentLoaded', initAdvancedEffects);
+        // -----------------------------------
+
+        function showDetail(index) {
+            const breed = breeds[index];
+            const gallery = document.getElementById('gallery');
+            const detailView = document.getElementById('detailView');
+            const mainTitle = document.getElementById('mainTitle');
+            const toggleButton = document.querySelector('.list-toggle-button');
+
+            document.getElementById('detailImage').src = breed.image;
+            document.getElementById('detailImage').alt = breed.name;
+            document.getElementById('detailTitle').textContent = breed.name;
+            document.getElementById('detailDescription').textContent = breed.description;
+
+            gallery.classList.add('hidden');
+            mainTitle.style.opacity = '0';
+            toggleButton.style.opacity = '0';
+
+            setTimeout(() => {
+                gallery.style.display = 'none';
+                mainTitle.style.display = 'none';
+                toggleButton.style.display = 'none';
+                detailView.classList.add('active');
+            }, 300);
+        }
+
+        function hideDetail() {
+            const gallery = document.getElementById('gallery');
+            const detailView = document.getElementById('detailView');
+            const mainTitle = document.getElementById('mainTitle');
+            const toggleButton = document.querySelector('.list-toggle-button');
+
+            detailView.classList.remove('active');
+
+            setTimeout(() => {
+                gallery.style.display = 'grid';
+                mainTitle.style.display = 'block';
+                toggleButton.style.display = 'block';
+
+                setTimeout(() => {
+                    gallery.classList.remove('hidden');
+                    mainTitle.style.opacity = '1';
+                    toggleButton.style.opacity = '1';
+                }, 50);
+            }, 300);
+        }
+
+        function showBreedList() {
+            const gallery = document.getElementById('gallery');
+            const mainTitle = document.getElementById('mainTitle');
+            const breedListView = document.getElementById('breedListView');
+            const toggleButton = document.querySelector('.list-toggle-button');
+            const breedListEl = document.getElementById('breedList');
+
+            breedListEl.innerHTML = breeds.map((breed, index) =>
+                `<li onclick="showDetailFromList(${index})">${breed.name}</li>`
+            ).join('');
+
+            gallery.classList.add('hidden');
+            mainTitle.style.opacity = '0';
+            toggleButton.style.opacity = '0';
+
+            setTimeout(() => {
+                gallery.style.display = 'none';
+                mainTitle.style.display = 'none';
+                toggleButton.style.display = 'none';
+                breedListView.classList.add('active');
+            }, 300);
+        }
+
+        function hideBreedList() {
+            const gallery = document.getElementById('gallery');
+            const mainTitle = document.getElementById('mainTitle');
+            const breedListView = document.getElementById('breedListView');
+            const toggleButton = document.querySelector('.list-toggle-button');
+
+            breedListView.classList.remove('active');
+
+            setTimeout(() => {
+                gallery.style.display = 'grid';
+                mainTitle.style.display = 'block';
+                toggleButton.style.display = 'block';
+
+                setTimeout(() => {
+                    gallery.classList.remove('hidden');
+                    mainTitle.style.opacity = '1';
+                    toggleButton.style.opacity = '1';
+                }, 50);
+            }, 300);
+        }
+
+        function showDetailFromList(index) {
+            const breedListView = document.getElementById('breedListView');
+            breedListView.classList.remove('active');
+
+            setTimeout(() => {
+                showDetail(index);
+            }, 300);
+        }
+    </script>
+</body>
+</html>
